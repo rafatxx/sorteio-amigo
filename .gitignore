@@ -20,3 +20,5 @@ db.sqlite3
 
 # Arquivos de log
 *.log
+
+.mypy_cache/
