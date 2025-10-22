@@ -9,4 +9,6 @@ router.register(r'participantes', views.ParticipanteViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+
+    path('menu/', views.MeuMenuView.as_view(), name='meu-menu'),
 ]
