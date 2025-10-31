@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Users, Home } from 'lucide-react';
-import { supabase, Participant, Assignment } from './lib/supabase';
+//import { supabase, Participant, Assignment } from './lib/supabase';
+import { getParticipants, getAssignments } from './lib/api'; // <-- Importe de api.ts
+import type { Participant, Assignment } from './lib/types'; // <-- Importe de types.ts
 import ParticipantCard from './components/ParticipantCard';
 import PasswordModal from './components/PasswordModal';
 import AuthenticatedMenu from './components/AuthenticatedMenu';
@@ -27,27 +29,24 @@ function App() {
 
   useEffect(() => {
     loadParticipants();
-    loadAssignments();
+    //loadAssignments();
   }, []);
 
   const loadParticipants = async () => {
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*')
-      .order('name');
-
-    if (data && !error) {
+    try {
+      const data = await getParticipants();
       setParticipants(data);
+    } catch (error) {
+      console.error("Erro ao carregar participantes:", error);
     }
   };
 
   const loadAssignments = async () => {
-    const { data, error } = await supabase
-      .from('assignments')
-      .select('*');
-
-    if (data && !error) {
+    try {
+      const data = await getAssignments();
       setAssignments(data);
+    } catch (error) {
+      console.error("Erro ao carregar sorteio:", error);
     }
   };
 
@@ -58,16 +57,21 @@ function App() {
   };
 
   const handlePasswordSubmit = async (password: string) => {
-    if (!selectedParticipant) return;
+  if (!selectedParticipant) return;
 
-    if (password !== selectedParticipant.password) {
-      setPasswordError('Senha incorreta! Tente novamente.');
-      return;
-    }
+  try {
+    const response = await login(selectedParticipant.name, password); 
+    const { access, refresh } = response.data;
+    localStorage.setItem('accessToken', access);
+    localStorage.setItem('refreshToken', refresh);
+    console.log("Login bem-sucedido! Token:", access);
+    await loadAssignments();
 
     const assignment = assignments.find(a => a.participant_id === selectedParticipant.id);
     if (!assignment) {
-      setPasswordError('Sorteio não encontrado!');
+      setPasswordError('Sorteio não encontrado para este participante!'); 
+      localStorage.removeItem('accessToken'); 
+      localStorage.removeItem('refreshToken');
       return;
     }
 
@@ -77,9 +81,21 @@ function App() {
     if (friend && enemy) {
       setSecretFriend(friend);
       setSecretEnemy(enemy);
-      setShowPasswordModal(false);
-      setShowAuthMenu(true);
+      setShowPasswordModal(false); 
+      setShowAuthMenu(true);       
+      setPasswordError('');         
+    } else {
+       setPasswordError('Amigo/Inimigo Secreto não encontrado na lista de participantes!');
+       localStorage.removeItem('accessToken'); 
+       localStorage.removeItem('refreshToken');
     }
+
+  } catch (error: any) {
+    console.error("Erro no login via API:", error);
+    setPasswordError('Usuário ou senha incorreta!'); 
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  }
   };
 
   const handleRevealFriend = () => {

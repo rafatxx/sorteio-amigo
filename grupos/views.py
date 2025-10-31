@@ -1,31 +1,37 @@
 from rest_framework import viewsets
 from django.contrib.auth.models import User
-from .models import Grupo, Participante
-from .serializers import UserSerializer, GrupoSerializer, ParticipanteSerializer
+from .models import Grupo, Participante, Resultado
+from .serializers import UserSerializer, GrupoSerializer, ParticipanteSerializer, ResultadoSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Resultado
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
 class GrupoViewSet(viewsets.ModelViewSet):
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
-
+    permission_classes = [AllowAny]
 
 class ParticipanteViewSet(viewsets.ModelViewSet):
     queryset = Participante.objects.all()
     serializer_class = ParticipanteSerializer
+    permission_classes = [AllowAny]
+
+class AssignmentViewSet(viewsets.ModelViewSet):
+    queryset = Resultado.objects.all()
+    serializer_class = ResultadoSerializer
+    permission_classes = [IsAuthenticated]
 
 class MeuMenuView(APIView):
     permission_classes = [IsAuthenticated] 
 
     def get(self, request, format=None):
         usuario = request.user 
-
         try:
             participante = Participante.objects.get(usuario=usuario, grupo__nome="Amigo Secreto 2025") # ATENÇÃO: Hardcoded!
             gostos_pessoais = participante.gostos_pessoais
