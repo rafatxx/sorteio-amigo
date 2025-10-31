@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Users, Home } from 'lucide-react';
 //import { supabase, Participant, Assignment } from './lib/supabase';
-import { getParticipants, getAssignments } from './lib/api'; // <-- Importe de api.ts
-import type { Participant, Assignment } from './lib/types'; // <-- Importe de types.ts
+import { getParticipants, getAssignments } from './lib/api';
+import type { Participant, Assignment } from './lib/types'; 
 import ParticipantCard from './components/ParticipantCard';
 import PasswordModal from './components/PasswordModal';
 import AuthenticatedMenu from './components/AuthenticatedMenu';

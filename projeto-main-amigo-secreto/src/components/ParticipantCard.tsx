@@ -1,4 +1,4 @@
-import { Participant } from '../lib/supabase';
+import type { Participant } from '../lib/types';
 
 interface ParticipantCardProps {
   participant: Participant;
@@ -10,6 +10,8 @@ export default function ParticipantCard({ participant, onClick, theme }: Partici
   const bgColor = theme === 'friend' ? 'bg-gray-800' : 'bg-gray-900';
   const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
   const hoverShadow = theme === 'friend' ? 'hover:shadow-green-500/50' : 'hover:shadow-red-500/50';
+  const inicial = participant.name?.charAt(0).toUpperCase() ?? '?';
+  const displayName = participant.name ?? 'Nome Indisponível';
 
   return (
     <div
@@ -20,21 +22,24 @@ export default function ParticipantCard({ participant, onClick, theme }: Partici
         {participant.photo_url ? (
           <img
             src={participant.photo_url}
-            alt={participant.name}
+            alt={displayName}
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl text-gray-400">
-            {participant.name.charAt(0)}
+            {inicial}
           </div>
         )}
       </div>
 
       <div className="flex-1">
-        <h3 className="text-white font-semibold text-lg">{participant.name}</h3>
-        <p className={`text-sm font-medium ${participant.gender === 'Masculino' ? 'text-blue-400' : 'text-pink-400'}`}>
-          {participant.gender}
-        </p>
+        <h3 className="text-white font-semibold text-lg">{displayName}</h3> 
+        
+        {participant.gender && (
+          <p className={`text-sm font-medium ${participant.gender === 'Masculino' ? 'text-blue-400' : 'text-pink-400'}`}>
+            {participant.gender}
+          </p>
+        )}
       </div>
     </div>
   );

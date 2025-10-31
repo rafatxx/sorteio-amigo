@@ -19,12 +19,32 @@ class Participante(models.Model):
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE)
     gostos_pessoais = models.TextField(blank=True, null=True, help_text="Escreva aqui seus gostos e sugestões de presente.")
     
+    GENDER_CHOICES = [
+        ('Masculino', 'Masculino'),
+        ('Feminino', 'Feminino'),
+    ]
+    
+    genero = models.CharField(
+        max_length=10, 
+        choices=GENDER_CHOICES, 
+        blank=True, 
+        null=True,
+        verbose_name="Gênero"
+    )
+    
+    photo_url = models.URLField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        verbose_name="URL da Foto"
+    )
+
     class Meta:
         unique_together = ('usuario', 'grupo')
 
     def __str__(self):
         return f"{self.usuario.username} no grupo {self.grupo.nome}"
-
+    
 class Exclusao(models.Model):
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE)
     doador = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exclusoes_feitas')

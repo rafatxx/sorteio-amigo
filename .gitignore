@@ -22,3 +22,6 @@ db.sqlite3
 *.log
 
 .mypy_cache/
+
+#senhas
+senhas.txt
