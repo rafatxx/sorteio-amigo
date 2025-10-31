@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Home } from 'lucide-react';
 //import { supabase, Participant, Assignment } from './lib/supabase';
-import { getParticipants, getAssignments } from './lib/api';
+import { getParticipants, getAssignments, login } from './lib/api';
 import type { Participant, Assignment } from './lib/types'; 
 import ParticipantCard from './components/ParticipantCard';
 import PasswordModal from './components/PasswordModal';
@@ -60,7 +60,7 @@ function App() {
   if (!selectedParticipant) return;
 
   try {
-    const response = await login(selectedParticipant.name, password); 
+    const response = await login(selectedParticipant.username, password); 
     const { access, refresh } = response.data;
     localStorage.setItem('accessToken', access);
     localStorage.setItem('refreshToken', refresh);
@@ -91,11 +91,17 @@ function App() {
     }
 
   } catch (error: any) {
-    console.error("Erro no login via API:", error);
-    setPasswordError('Usuário ou senha incorreta!'); 
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-  }
+      console.error("Erro no login via API:", error);
+
+      if (error.response && (error.response.status === 401 || error.response.status === 400)) {
+        setPasswordError('Usuário ou senha incorreta!');
+      } else {
+        setPasswordError('Erro de conexão. Tente novamente.');
+      }
+      
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    }
   };
 
   const handleRevealFriend = () => {

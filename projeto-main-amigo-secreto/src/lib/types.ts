@@ -1,9 +1,10 @@
 export interface Participant {
   id: string;
   name: string;
+  username: string;
   gender: 'Masculino' | 'Feminino';
   photo_url: string;
-  password: string;
+  gostos_pessoais: string;
 }
 
 export interface Assignment {

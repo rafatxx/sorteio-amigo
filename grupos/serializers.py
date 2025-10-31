@@ -19,13 +19,15 @@ class GrupoSerializer(serializers.ModelSerializer):
 
 class ParticipanteSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='usuario.get_full_name', read_only=True)
+    username = serializers.CharField(source='usuario.username', read_only=True)
     gender = serializers.CharField(source='genero', read_only=True)
     class Meta:
         model = Participante
         fields = [
-            'id', 
-            'name',             
-            'gender',           
-            'photo_url',        
-            'gostos_pessoais'   
+            'id',
+            'name', 
+            'username',
+            'gender',
+            'photo_url',
+            'gostos_pessoais'
         ]
