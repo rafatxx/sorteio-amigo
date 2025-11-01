@@ -21,10 +21,12 @@ class ParticipanteSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='usuario.get_full_name', read_only=True)
     username = serializers.CharField(source='usuario.username', read_only=True)
     gender = serializers.CharField(source='genero', read_only=True)
+    user_id = serializers.IntegerField(source='usuario.id', read_only=True)
     class Meta:
         model = Participante
         fields = [
             'id',
+            'user_id',
             'name', 
             'username',
             'gender',

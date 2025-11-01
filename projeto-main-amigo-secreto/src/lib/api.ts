@@ -1,26 +1,33 @@
 import axios from 'axios';
-import type { Participant, Assignment } from './types'; // <-- Adicione Assignment aqui
+import type { Participant } from './types'; 
 
 const apiClient = axios.create({
   baseURL: 'http://127.0.0.1:8000/api/'
 });
 
-// --- Função de Login com tipos ---
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config; 
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const login = (username: string, password: string) => {
-  return apiClient.post<{ access: string, refresh: string }>('/token/', { username, password });
-  // Adicionei o tipo de retorno esperado: { access: string, refresh: string }
+  return apiClient.post('/token/', { username, password });
 };
 
-// --- Função para buscar participantes ---
 export const getParticipants = async (): Promise<Participant[]> => {
-  // TODO: Adicionar header de autenticação aqui!
   const response = await apiClient.get('/participants/');
   return response.data;
 };
 
-// --- NOVA FUNÇÃO para buscar o sorteio ---
-export const getAssignments = async (): Promise<Assignment[]> => {
-  // TODO: Adicionar header de autenticação aqui também!
-  const response = await apiClient.get('/assignments/'); // <-- Verifique se a URL no Django é essa
+export const getAssignments = async () => { 
+  const response = await apiClient.get('/assignments/');
   return response.data;
 };

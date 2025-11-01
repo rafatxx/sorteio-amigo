@@ -1,5 +1,6 @@
 export interface Participant {
   id: string;
+  user_id: number;
   name: string;
   username: string;
   gender: 'Masculino' | 'Feminino';
@@ -7,9 +8,10 @@ export interface Participant {
   gostos_pessoais: string;
 }
 
-export interface Assignment {
-  id: string;
-  participant_id: string;
-  secret_friend_id: string;
-  secret_enemy_id: string;
+export interface Resultado {
+  id: number;
+  doador: number;
+  receptor: number;
+  grupo: number;
+  tipo_sorteio: 'amigo' | 'inimigo';
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Home } from 'lucide-react';
 //import { supabase, Participant, Assignment } from './lib/supabase';
 import { getParticipants, getAssignments, login } from './lib/api';
-import type { Participant, Assignment } from './lib/types'; 
+import type { Participant, Resultado } from './lib/types'; 
 import ParticipantCard from './components/ParticipantCard';
 import PasswordModal from './components/PasswordModal';
 import AuthenticatedMenu from './components/AuthenticatedMenu';
@@ -16,7 +16,7 @@ type RevealType = 'friend' | 'enemy' | null;
 function App() {
   const [view, setView] = useState<View>('home');
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignments, setAssignments] = useState<Resultado[]>([]);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showAuthMenu, setShowAuthMenu] = useState(false);
@@ -41,12 +41,14 @@ function App() {
     }
   };
 
-  const loadAssignments = async () => {
+  const loadAssignments = async (): Promise<Resultado[]> => {
     try {
       const data = await getAssignments();
       setAssignments(data);
+      return data;
     } catch (error) {
       console.error("Erro ao carregar sorteio:", error);
+      return [];
     }
   };
 
@@ -57,48 +59,56 @@ function App() {
   };
 
   const handlePasswordSubmit = async (password: string) => {
-  if (!selectedParticipant) return;
+    if (!selectedParticipant) return;
 
-  try {
-    const response = await login(selectedParticipant.username, password); 
-    const { access, refresh } = response.data;
-    localStorage.setItem('accessToken', access);
-    localStorage.setItem('refreshToken', refresh);
-    console.log("Login bem-sucedido! Token:", access);
-    await loadAssignments();
+    try {
+      const response = await login(selectedParticipant.username, password);
+      const { access, refresh } = response.data;
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+      console.log("Login bem-sucedido! Token:", access);
 
-    const assignment = assignments.find(a => a.participant_id === selectedParticipant.id);
-    if (!assignment) {
-      setPasswordError('Sorteio não encontrado para este participante!'); 
-      localStorage.removeItem('accessToken'); 
-      localStorage.removeItem('refreshToken');
-      return;
-    }
+      const assignmentsData = await loadAssignments(); 
+      if (assignmentsData.length === 0) {
+           setPasswordError('Sorteio não encontrado (dados vazios)!');
+           return;
+      }
 
-    const friend = participants.find(p => p.id === assignment.secret_friend_id);
-    const enemy = participants.find(p => p.id === assignment.secret_enemy_id);
+      const loggedInUserId = selectedParticipant.user_id;
 
-    if (friend && enemy) {
-      setSecretFriend(friend);
-      setSecretEnemy(enemy);
-      setShowPasswordModal(false); 
-      setShowAuthMenu(true);       
-      setPasswordError('');         
-    } else {
-       setPasswordError('Amigo/Inimigo Secreto não encontrado na lista de participantes!');
-       localStorage.removeItem('accessToken'); 
-       localStorage.removeItem('refreshToken');
-    }
+      const friendAssignment = assignmentsData.find(
+        (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'amigo'
+      );
 
-  } catch (error: any) {
+      const enemyAssignment = assignmentsData.find(
+        (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'inimigo'
+      );
+
+      if (!friendAssignment || !enemyAssignment) {
+        setPasswordError('Sorteio incompleto para este participante!');
+        return;
+      }
+
+      const friend = participants.find(p => p.user_id === friendAssignment.receptor);
+      const enemy = participants.find(p => p.user_id === enemyAssignment.receptor);
+
+      if (friend && enemy) {
+        setSecretFriend(friend);
+        setSecretEnemy(enemy);
+        setShowPasswordModal(false);
+        setShowAuthMenu(true);
+        setPasswordError('');
+      } else {
+         setPasswordError('Amigo/Inimigo Secreto não encontrado na lista de participantes!');
+      }
+
+    } catch (error: any) {
       console.error("Erro no login via API:", error);
-
       if (error.response && (error.response.status === 401 || error.response.status === 400)) {
         setPasswordError('Usuário ou senha incorreta!');
       } else {
         setPasswordError('Erro de conexão. Tente novamente.');
       }
-      
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     }
