@@ -14,7 +14,7 @@ def realizar_sorteio(modeladmin, request, queryset):
 
         if n < 2:
             modeladmin.message_user(request, f"O grupo '{grupo.nome}' precisa de pelo menos 2 participantes para o sorteio.", messages.ERROR)
-            continue
+            continue 
 
         try:
             with transaction.atomic():
@@ -24,20 +24,23 @@ def realizar_sorteio(modeladmin, request, queryset):
                 sorteio_amigo_ok = False
                 pares_amigo = {}
 
-                for _ in range(10): 
+                for _ in range(10):
                     random.shuffle(lista_amigo)
                     valido = True
                     for i in range(n):
                         doador = lista_amigo[i]
-                        receptor = lista_amigo[(i + 1) % n]
+                        receptor = lista_amigo[(i + 1) % n] 
+                        
                         if Exclusao.objects.filter(grupo=grupo, doador=doador, excluido=receptor, tipo_sorteio='amigo').exists():
                             valido = False
                             break
+                    
                     if valido:
                         for i in range(n):
                             pares_amigo[lista_amigo[i]] = lista_amigo[(i + 1) % n]
                         sorteio_amigo_ok = True
                         break
+                
                 if not sorteio_amigo_ok:
                     raise Exception(f"Não foi possível gerar o sorteio de AMIGOS para '{grupo.nome}'. Verifique suas 'Exclusões'.")
 
@@ -51,24 +54,28 @@ def realizar_sorteio(modeladmin, request, queryset):
                     for i in range(n):
                         doador = lista_inimigo[i]
                         receptor = lista_inimigo[(i + 1) % n]
-                        if receptor == pares_amigo[doador] or \
-                           Exclusao.objects.filter(grupo=grupo, doador=doador, excluido=receptor, tipo_sorteio='inimigo').exists():
+
+                        if Exclusao.objects.filter(grupo=grupo, doador=doador, excluido=receptor, tipo_sorteio='inimigo').exists():
                             valido = False
                             break
+                    
                     if valido:
                         for i in range(n):
                             pares_inimigo[lista_inimigo[i]] = lista_inimigo[(i + 1) % n]
                         sorteio_inimigo_ok = True
                         break
+
                 if not sorteio_inimigo_ok:
-                    raise Exception(f"Não foi possível gerar o sorteio de INIMIGOS para '{grupo.nome}'. Verifique suas regras.")
+                    raise Exception(f"Não foi possível gerar o sorteio de INIMIGOS para '{grupo.nome}' após 10 tentativas. Verifique suas regras de 'Exclusão'.")
 
                 for doador, receptor in pares_amigo.items():
                     Resultado.objects.create(grupo=grupo, doador=doador, receptor=receptor, tipo_sorteio='amigo')
+                
                 for doador, receptor in pares_inimigo.items():
                     Resultado.objects.create(grupo=grupo, doador=doador, receptor=receptor, tipo_sorteio='inimigo')
 
             modeladmin.message_user(request, f"Sorteio para o grupo '{grupo.nome}' foi realizado com sucesso!", messages.SUCCESS)
+
         except Exception as e:
             modeladmin.message_user(request, str(e), messages.ERROR)
 
