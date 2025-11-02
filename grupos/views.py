@@ -15,7 +15,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class GrupoViewSet(viewsets.ModelViewSet):
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]   
 
 class ParticipanteViewSet(viewsets.ModelViewSet):
     queryset = Participante.objects.all()
