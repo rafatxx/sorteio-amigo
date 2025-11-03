@@ -12,7 +12,10 @@ const parsePreferences = (gostos: string | null | undefined): string[] => {
   if (!gostos || gostos.trim() === '') {
     return [];
   }
-  return gostos.split(',').filter(pref => pref.trim() !== '');
+  
+  return gostos.split(',')
+    .map(pref => pref.trim())
+    .filter(pref => pref !== '');
 };
 
 export default function PreferencesModal({

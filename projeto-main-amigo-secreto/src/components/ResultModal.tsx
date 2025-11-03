@@ -90,7 +90,7 @@ export default function ResultModal({
             <p className="text-gray-300 text-sm bg-gray-900/50 p-3 rounded-lg max-h-24 overflow-y-auto">
               {loadingGostos
                 ? 'Carregando preferências...'
-                : gostosAtualizados || 'Nenhuma preferência adicionada ainda.'}
+                : (gostosAtualizados && gostosAtualizados.replace(/,/g, ', ')) || 'Nenhuma preferência adicionada ainda.'}
             </p>
           </div>
         )}
