@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Participant } from '../lib/supabase';
+import type { Participant } from '../lib/types';
+import { getParticipantDetails } from '../lib/api';
 
 interface ResultModalProps {
   participant: Participant;
@@ -9,19 +11,46 @@ interface ResultModalProps {
   theme: 'friend' | 'enemy';
 }
 
-export default function ResultModal({ participant, secretFriend, secretEnemy, onClose, theme }: ResultModalProps) {
-  const accentColor = theme === 'friend' ? 'green' : 'red';
-  const bgGradient = theme === 'friend'
-    ? 'from-green-500/20 to-black'
-    : 'from-red-500/20 to-black';
-  const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
-
-  const displayPerson = theme === 'friend' ? secretFriend : secretEnemy;
+export default function ResultModal({
+  secretFriend,
+  secretEnemy,
+  onClose,
+  theme,
+}: ResultModalProps) {
+  
+  const personToShow = theme === 'friend' ? secretFriend : secretEnemy;
   const title = theme === 'friend' ? 'Seu Amigo Secreto é:' : 'Seu Inimigo Secreto é:';
+  
+  const bgColor = theme === 'friend' ? 'bg-gradient-to-b from-green-500/20 to-black' : 'bg-gradient-to-b from-red-500/20 to-black';
+  const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
+  const buttonColor = theme === 'friend' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+
+  const displayName = personToShow.name ?? 'Nome Indisponível';
+  const inicial = personToShow.name?.charAt(0).toUpperCase() ?? '?';
+
+  const [gostosAtualizados, setGostosAtualizados] = useState(secretFriend.gostos_pessoais);
+  const [loadingGostos, setLoadingGostos] = useState(false);
+
+  useEffect(() => {
+    if (theme === 'friend') {
+      const fetchLatestPreferences = async () => {
+        setLoadingGostos(true);
+        try {
+          const amigoAtualizado = await getParticipantDetails(secretFriend.id.toString());
+          setGostosAtualizados(amigoAtualizado.gostos_pessoais);
+        } catch (error) {
+          console.error("Erro ao buscar gostos atualizados:", error);
+        }
+        setLoadingGostos(false);
+      };
+
+      fetchLatestPreferences();
+    }
+  }, [secretFriend.id, theme]);
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className={`bg-gradient-to-b ${bgGradient} border-2 ${borderColor} rounded-2xl p-8 max-w-md w-full relative shadow-2xl`}>
+      <div className={`${bgColor} ${borderColor} border-2 rounded-2xl p-8 max-w-md w-full relative shadow-2xl text-center`}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
@@ -29,39 +58,46 @@ export default function ResultModal({ participant, secretFriend, secretEnemy, on
           <X size={24} />
         </button>
 
-        <h2 className="text-xl font-semibold text-gray-300 mb-6 text-center">{participant.name}</h2>
+        <h2 className="text-2xl font-bold text-gray-300 mb-6">{title}</h2>
 
-        <h3 className={`text-3xl font-bold text-${accentColor}-500 mb-8 text-center animate-pulse`}>
-          {title}
-        </h3>
-
-        <div className="flex flex-col items-center">
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-700 mb-4 border-4 border-${accentColor}-500 shadow-lg">
-            {displayPerson.photo_url ? (
-              <img
-                src={displayPerson.photo_url}
-                alt={displayPerson.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-5xl text-gray-400">
-                {displayPerson.name.charAt(0)}
-              </div>
-            )}
-          </div>
-
-          <h4 className="text-2xl font-bold text-white text-center mb-2">
-            {displayPerson.name}
-          </h4>
-
-          <p className={`text-lg font-medium ${displayPerson.gender === 'Masculino' ? 'text-blue-400' : 'text-pink-400'}`}>
-            {displayPerson.gender}
-          </p>
+        <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-700 mx-auto border-4 border-gray-600 mb-4">
+          {personToShow.photo_url ? (
+            <img
+              src={personToShow.photo_url}
+              alt={displayName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-5xl text-gray-400">
+              {inicial}
+            </div>
+          )}
         </div>
+        
+        <h3 className="text-white font-bold text-3xl mb-1">{displayName}</h3>
+        {personToShow.gender && (
+          <p className={`text-lg font-medium ${personToShow.gender === 'Masculino' ? 'text-blue-400' : 'text-pink-400'}`}>
+            {personToShow.gender}
+          </p>
+        )}
+        
+        {theme === 'friend' && (
+          <div className="mt-6 pt-6 border-t border-gray-700 text-left">
+            <h4 className="text-lg font-semibold text-white mb-2">
+              Preferências de {secretFriend.name.split(' ')[0]}:
+            </h4>
+            
+            <p className="text-gray-300 text-sm bg-gray-900/50 p-3 rounded-lg max-h-24 overflow-y-auto">
+              {loadingGostos
+                ? 'Carregando preferências...'
+                : gostosAtualizados || 'Nenhuma preferência adicionada ainda.'}
+            </p>
+          </div>
+        )}
 
         <button
           onClick={onClose}
-          className={`w-full mt-8 bg-${accentColor}-500 hover:bg-${accentColor}-600 text-white font-bold py-3 rounded-lg transition-all duration-300 transform hover:scale-105`}
+          className={`${buttonColor} w-full mt-8 py-3 rounded-lg text-lg text-white font-bold transition-all duration-300 transform hover:scale-105`}
         >
           Fechar
         </button>
