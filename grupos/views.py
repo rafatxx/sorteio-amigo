@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from django.contrib.auth.models import User
 from .models import Grupo, Participante, Resultado
+from .permissions import IsOwnerOrReadOnly
 from .serializers import UserSerializer, GrupoSerializer, ParticipanteSerializer, ResultadoSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,7 +21,7 @@ class GrupoViewSet(viewsets.ModelViewSet):
 class ParticipanteViewSet(viewsets.ModelViewSet):
     queryset = Participante.objects.all()
     serializer_class = ParticipanteSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny, IsOwnerOrReadOnly]
 
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Resultado.objects.all()

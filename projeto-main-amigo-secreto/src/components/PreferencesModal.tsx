@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-
-interface Preference {
-  id: string;
-  preference: string;
-}
+import { getParticipantDetails, updateParticipantPreferences } from '../lib/api';
 
 interface PreferencesModalProps {
   participantId: string;
@@ -13,57 +8,73 @@ interface PreferencesModalProps {
   onClose: () => void;
 }
 
+const parsePreferences = (gostos: string | null | undefined): string[] => {
+  if (!gostos || gostos.trim() === '') {
+    return [];
+  }
+  return gostos.split(',').filter(pref => pref.trim() !== '');
+};
+
 export default function PreferencesModal({
   participantId,
   participantName,
   onClose,
 }: PreferencesModalProps) {
-  const [preferences, setPreferences] = useState<Preference[]>([]);
+  const [preferences, setPreferences] = useState<string[]>([]);
   const [newPreference, setNewPreference] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadPreferences();
   }, [participantId]);
 
   const loadPreferences = async () => {
-    const { data, error } = await supabase
-      .from('preferences')
-      .select('*')
-      .eq('participant_id', participantId)
-      .order('created_at', { ascending: false });
-
-    if (data && !error) {
-      setPreferences(data);
+    setLoading(true);
+    setError('');
+    try {
+      const participant = await getParticipantDetails(participantId);
+      setPreferences(parsePreferences(participant.gostos_pessoais));
+    } catch (err) {
+      console.error("Erro ao carregar preferências:", err);
+      setError("Não foi possível carregar suas preferências.");
     }
+    setLoading(false);
+  };
+
+  const savePreferences = async (updatedPrefs: string[]) => {
+    setLoading(true);
+    setError('');
+    try {
+      const gostosString = updatedPrefs.join(',');
+      await updateParticipantPreferences(participantId, gostosString);
+      setPreferences(updatedPrefs);
+    } catch (err) {
+      console.error("Erro ao salvar preferência:", err);
+      setError("Não foi possível salvar. Tente novamente.");
+    }
+    setLoading(false);
   };
 
   const handleAddPreference = async () => {
-    if (!newPreference.trim()) return;
+    if (!newPreference.trim() || loading) return;
 
-    setLoading(true);
-    const { error } = await supabase
-      .from('preferences')
-      .insert([{ participant_id: participantId, preference: newPreference.trim() }]);
-
-    if (!error) {
+    const newPrefText = newPreference.trim();
+    if (preferences.includes(newPrefText)) {
       setNewPreference('');
-      await loadPreferences();
+      return;
     }
-    setLoading(false);
+
+    const updatedPrefs = [...preferences, newPrefText];
+    await savePreferences(updatedPrefs);
+    setNewPreference('');
   };
 
-  const handleDeletePreference = async (id: string) => {
-    setLoading(true);
-    const { error } = await supabase
-      .from('preferences')
-      .delete()
-      .eq('id', id);
+  const handleDeletePreference = async (preferenceToDelete: string) => {
+    if (loading) return;
 
-    if (!error) {
-      await loadPreferences();
-    }
-    setLoading(false);
+    const updatedPrefs = preferences.filter(pref => pref !== preferenceToDelete);
+    await savePreferences(updatedPrefs);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -107,24 +118,27 @@ export default function PreferencesModal({
               <Plus size={24} />
             </button>
           </div>
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
         </div>
 
         <div>
           <h3 className="text-white font-semibold mb-3">Suas Preferências:</h3>
-          {preferences.length === 0 ? (
+          {loading && preferences.length === 0 ? (
+             <p className="text-gray-400 text-center py-8">Carregando...</p>
+          ) : preferences.length === 0 ? (
             <p className="text-gray-400 text-center py-8">
               Nenhuma preferência adicionada ainda
             </p>
           ) : (
             <div className="space-y-2">
-              {preferences.map((pref) => (
+              {preferences.map((pref, index) => (
                 <div
-                  key={pref.id}
+                  key={index}
                   className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex items-center justify-between"
                 >
-                  <span className="text-white">{pref.preference}</span>
+                  <span className="text-white">{pref}</span>
                   <button
-                    onClick={() => handleDeletePreference(pref.id)}
+                    onClick={() => handleDeletePreference(pref)}
                     disabled={loading}
                     className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
                   >

@@ -25,10 +25,8 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       console.error("Erro 401: Token inválido ou expirado. Limpando sessão.");
-      
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
-      
       window.location.reload(); 
     }
     
@@ -47,5 +45,17 @@ export const getParticipants = async (): Promise<Participant[]> => {
 
 export const getAssignments = async (): Promise<Resultado[]> => { 
   const response = await apiClient.get('/assignments/');
+  return response.data;
+};
+
+export const getParticipantDetails = async (participantId: string): Promise<Participant> => {
+  const response = await apiClient.get(`/participants/${participantId}/`);
+  return response.data;
+};
+
+export const updateParticipantPreferences = async (participantId: string, gostosString: string) => {
+  const response = await apiClient.patch(`/participants/${participantId}/`, {
+    gostos_pessoais: gostosString
+  });
   return response.data;
 };
