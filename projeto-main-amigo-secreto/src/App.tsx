@@ -58,7 +58,7 @@ function App() {
     setPasswordError('');
   };
 
-  const handlePasswordSubmit = async (password: string) => {
+const handlePasswordSubmit = async (password: string) => {
     if (!selectedParticipant) return;
 
     try {
@@ -80,27 +80,34 @@ function App() {
         (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'amigo'
       );
 
-      const enemyAssignment = assignmentsData.find(
-        (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'inimigo'
-      );
-
-      if (!friendAssignment || !enemyAssignment) {
-        setPasswordError('Sorteio incompleto para este participante!');
+      if (!friendAssignment) {
+        setPasswordError('Sorteio de AMIGO incompleto para este participante!');
         return;
       }
 
       const friend = participants.find(p => p.user_id === friendAssignment.receptor);
-      const enemy = participants.find(p => p.user_id === enemyAssignment.receptor);
-
-      if (friend && enemy) {
-        setSecretFriend(friend);
-        setSecretEnemy(enemy);
-        setShowPasswordModal(false);
-        setShowAuthMenu(true);
-        setPasswordError('');
-      } else {
-         setPasswordError('Amigo/Inimigo Secreto não encontrado na lista de participantes!');
+      if (!friend) {
+        setPasswordError('Amigo Secreto não encontrado na lista de participantes!');
+        return;
       }
+
+      const enemyAssignment = assignmentsData.find(
+        (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'inimigo'
+      );
+      
+      let enemy: Participant | null = null;
+      if (enemyAssignment) {
+        const foundEnemy = participants.find(p => p.user_id === enemyAssignment.receptor);
+        if (foundEnemy) {
+          enemy = foundEnemy;
+        }
+      }
+      
+      setSecretFriend(friend);
+      setSecretEnemy(enemy);
+      setShowPasswordModal(false); 
+      setShowAuthMenu(true);
+      setPasswordError('');
 
     } catch (error: any) {
       console.error("Erro no login via API:", error);
@@ -223,7 +230,7 @@ function App() {
         />
       )}
 
-      {showResultModal && selectedParticipant && secretFriend && secretEnemy && revealType && (
+      {showResultModal && selectedParticipant && secretFriend && revealType && (
         <ResultModal
           participant={selectedParticipant}
           secretFriend={secretFriend}
@@ -231,7 +238,7 @@ function App() {
           onClose={handleCloseResult}
           theme={revealType}
         />
-      )}
+      )} 
 
       {showPreferencesModal && selectedParticipant && (
         <PreferencesModal

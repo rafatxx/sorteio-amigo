@@ -6,7 +6,7 @@ import { getParticipantDetails } from '../lib/api';
 interface ResultModalProps {
   participant: Participant;
   secretFriend: Participant;
-  secretEnemy: Participant;
+  secretEnemy: Participant | null; 
   onClose: () => void;
   theme: 'friend' | 'enemy';
 }
@@ -25,36 +25,70 @@ export default function ResultModal({
   const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
   const buttonColor = theme === 'friend' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
 
-  const displayName = personToShow.name ?? 'Nome Indisponível';
-  const inicial = personToShow.name?.charAt(0).toUpperCase() ?? '?';
-
   const [gostosAtualizados, setGostosAtualizados] = useState(secretFriend.gostos_pessoais);
   const [loadingGostos, setLoadingGostos] = useState(false);
 
   useEffect(() => {
-    if (theme === 'friend') {
-      const fetchLatestPreferences = async () => {
-        setLoadingGostos(true);
-        try {
-          const amigoAtualizado = await getParticipantDetails(secretFriend.id.toString());
+    if (theme === 'friend' && secretFriend) {
+      setLoadingGostos(true);
+      getParticipantDetails(secretFriend.id.toString())
+        .then(amigoAtualizado => {
           setGostosAtualizados(amigoAtualizado.gostos_pessoais);
-        } catch (error) {
+        })
+        .catch(error => {
           console.error("Erro ao buscar gostos atualizados:", error);
-        }
-        setLoadingGostos(false);
-      };
-
-      fetchLatestPreferences();
+        })
+        .finally(() => {
+          setLoadingGostos(false);
+        });
     }
-  }, [secretFriend.id, theme]);
+  }, [secretFriend?.id, theme]);
+
+  if (theme === 'enemy' && !secretEnemy) {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-b from-red-500/20 to-black border-2 border-red-500 rounded-2xl p-8 max-w-md w-full relative shadow-2xl text-center">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+            <X size={24} />
+          </button>
+          
+          <h2 className="text-2xl font-bold text-white mb-6">Ih, arregou?</h2>
+          
+          <div className="text-gray-300 text-lg space-y-4">
+            <p>Parece que você escolheu não participar do Inimigo Secreto este ano!</p>
+            <p>Ficou com medinho, né? 😂😂😂😂</p>
+            <p className="text-sm text-gray-400">(Ano que vem você participa!)</p>
+          </div>
+          
+          <button
+            onClick={onClose}
+            className="bg-red-500 hover:bg-red-600 w-full mt-8 py-3 rounded-lg text-lg text-white font-bold transition-all duration-300 transform hover:scale-105"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!personToShow) {
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+         <div className="bg-gray-800 border-2 border-gray-600 rounded-2xl p-8 text-center">
+           <p className="text-white text-lg">Ocorreu um erro ao carregar os dados do sorteio.</p>
+           <button onClick={onClose} className="bg-gray-500 mt-4 px-4 py-2 rounded">Fechar</button>
+         </div>
+       </div>
+    );
+  }
+
+  const displayName = personToShow.name ?? 'Nome Indisponível';
+  const inicial = personToShow.name?.charAt(0).toUpperCase() ?? '?';
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className={`${bgColor} ${borderColor} border-2 rounded-2xl p-8 max-w-md w-full relative shadow-2xl text-center`}>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
           <X size={24} />
         </button>
 
@@ -86,7 +120,6 @@ export default function ResultModal({
             <h4 className="text-lg font-semibold text-white mb-2">
               Preferências de {secretFriend.name.split(' ')[0]}:
             </h4>
-            
             <p className="text-gray-300 text-sm bg-gray-900/50 p-3 rounded-lg max-h-24 overflow-y-auto">
               {loadingGostos
                 ? 'Carregando preferências...'

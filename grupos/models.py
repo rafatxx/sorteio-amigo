@@ -39,6 +39,15 @@ class Participante(models.Model):
         verbose_name="URL da Foto"
     )
 
+    participa_amigo = models.BooleanField(
+        default=True,
+        verbose_name="Participa do Amigo Secreto?"
+    )
+    participa_inimigo = models.BooleanField(
+        default=True,
+        verbose_name="Participa do Inimigo Secreto?"
+    )
+
     class Meta:
         unique_together = ('usuario', 'grupo')
 
