@@ -22,10 +22,11 @@ class Participante(models.Model):
     GENDER_CHOICES = [
         ('Masculino', 'Masculino'),
         ('Feminino', 'Feminino'),
+        ('Não Binário', 'Não Binário'),
     ]
     
     genero = models.CharField(
-        max_length=10, 
+        max_length=20, 
         choices=GENDER_CHOICES, 
         blank=True, 
         null=True,

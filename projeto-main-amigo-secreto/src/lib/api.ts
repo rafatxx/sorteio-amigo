@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Participant, Resultado } from './types'; 
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/'
 });
 
 apiClient.interceptors.request.use(
@@ -11,7 +11,7 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    return config; 
+    return config;
   },
   (error) => {
     return Promise.reject(error);
@@ -29,33 +29,40 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('refreshToken');
       window.location.reload(); 
     }
-    
     return Promise.reject(error);
   }
 );
 
 export const login = (username: string, password: string) => {
-  return apiClient.post('/token/', { username, password });
+  return apiClient.post<{ access: string, refresh: string }>('/token/', { username, password });
 };
 
 export const getParticipants = async (): Promise<Participant[]> => {
   const response = await apiClient.get('/participants/');
-  return response.data;
+  
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+  return response.data.results;
 };
 
-export const getAssignments = async (): Promise<Resultado[]> => { 
+export const getAssignments = async (): Promise<Resultado[]> => {
   const response = await apiClient.get('/assignments/');
-  return response.data;
+  
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+  return response.data.results;
 };
 
-export const getParticipantDetails = async (participantId: string): Promise<Participant> => {
-  const response = await apiClient.get(`/participants/${participantId}/`);
-  return response.data;
+export const getParticipantDetails = async (id: string): Promise<Participant> => {
+  const response = await apiClient.get(`/participants/${id}/`);
+  return response.data; 
 };
 
-export const updateParticipantPreferences = async (participantId: string, gostosString: string) => {
-  const response = await apiClient.patch(`/participants/${participantId}/`, {
-    gostos_pessoais: gostosString
+export const updateParticipantPreferences = async (id: string, newPreferences: string): Promise<Participant> => {
+  const response = await apiClient.patch(`/participants/${id}/`, {
+    gostos_pessoais: newPreferences
   });
   return response.data;
 };

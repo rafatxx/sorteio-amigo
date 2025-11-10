@@ -6,12 +6,22 @@ interface ParticipantCardProps {
   theme: 'friend' | 'enemy';
 }
 
+const getGenderColor = (gender: Participant['gender']) => {
+  if (gender === 'Masculino') return 'text-blue-400';
+  if (gender === 'Feminino') return 'text-pink-400';
+  if (gender === 'Não Binário') return 'text-purple-400';
+  return 'text-gray-400';
+};
+
 export default function ParticipantCard({ participant, onClick, theme }: ParticipantCardProps) {
   const bgColor = theme === 'friend' ? 'bg-gray-800' : 'bg-gray-900';
   const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
   const hoverShadow = theme === 'friend' ? 'hover:shadow-green-500/50' : 'hover:shadow-red-500/50';
+
   const inicial = participant.name?.charAt(0).toUpperCase() ?? '?';
   const displayName = participant.name ?? 'Nome Indisponível';
+  
+  const genderColor = getGenderColor(participant.gender);
 
   return (
     <div
@@ -33,10 +43,9 @@ export default function ParticipantCard({ participant, onClick, theme }: Partici
       </div>
 
       <div className="flex-1">
-        <h3 className="text-white font-semibold text-lg">{displayName}</h3> 
-        
+        <h3 className="text-white font-semibold text-lg">{displayName}</h3>
         {participant.gender && (
-          <p className={`text-sm font-medium ${participant.gender === 'Masculino' ? 'text-blue-400' : 'text-pink-400'}`}>
+          <p className={`text-sm font-medium ${genderColor}`}>
             {participant.gender}
           </p>
         )}

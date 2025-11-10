@@ -3,7 +3,7 @@ export interface Participant {
   user_id: number;
   name: string;
   username: string;
-  gender: 'Masculino' | 'Feminino';
+  gender: 'Masculino' | 'Feminino' | 'Não Binário';
   photo_url: string;
   gostos_pessoais: string;
 }
