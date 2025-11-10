@@ -10,6 +10,14 @@ import ResultModal from './components/ResultModal';
 import PreferencesModal from './components/PreferencesModal';
 import Snowfall from './components/Snowfall';
 
+const CACHE_KEY = 'participants_cache';
+const CACHE_EXPIRATION_MS = 10 * 60 * 1000;
+
+interface CacheData {
+  timestamp: number;
+  participants: Participant[];
+}
+
 type View = 'home' | 'userlist';
 type RevealType = 'friend' | 'enemy' | null;
 
@@ -27,17 +35,36 @@ function App() {
   const [secretEnemy, setSecretEnemy] = useState<Participant | null>(null);
   const [revealType, setRevealType] = useState<RevealType>(null);
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   useEffect(() => {
     loadParticipants();
     //loadAssignments();
   }, []);
 
   const loadParticipants = async () => {
+    const cachedDataString = localStorage.getItem(CACHE_KEY);
+    if (cachedDataString) {
+      const cache: CacheData = JSON.parse(cachedDataString);
+      const now = new Date().getTime();
+      if (now - cache.timestamp < CACHE_EXPIRATION_MS) {
+        console.log("Carregando participantes do CACHE ⚡️");
+        setParticipants(cache.participants);
+        return; 
+      }
+    }
+    console.log("Buscando participantes do Servidor/API ☁️");
     try {
       const data = await getParticipants();
       setParticipants(data);
+      const newCache: CacheData = {
+        timestamp: new Date().getTime(),
+        participants: data
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(newCache));
     } catch (error) {
       console.error("Erro ao carregar participantes:", error);
+      localStorage.removeItem(CACHE_KEY);
     }
   };
 
@@ -58,8 +85,11 @@ function App() {
     setPasswordError('');
   };
 
-const handlePasswordSubmit = async (password: string) => {
-    if (!selectedParticipant) return;
+  const handlePasswordSubmit = async (password: string) => {
+    if (!selectedParticipant || isLoggingIn) return;
+
+    setIsLoggingIn(true);
+    setPasswordError('');
 
     try {
       const response = await login(selectedParticipant.username, password);
@@ -71,30 +101,29 @@ const handlePasswordSubmit = async (password: string) => {
       const assignmentsData = await loadAssignments(); 
       if (assignmentsData.length === 0) {
            setPasswordError('Sorteio não encontrado (dados vazios)!');
+           setIsLoggingIn(false);
            return;
       }
 
       const loggedInUserId = selectedParticipant.user_id;
-
       const friendAssignment = assignmentsData.find(
         (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'amigo'
       );
-
       if (!friendAssignment) {
         setPasswordError('Sorteio de AMIGO incompleto para este participante!');
+        setIsLoggingIn(false);
         return;
       }
-
       const friend = participants.find(p => p.user_id === friendAssignment.receptor);
       if (!friend) {
         setPasswordError('Amigo Secreto não encontrado na lista de participantes!');
+        setIsLoggingIn(false);
         return;
       }
 
       const enemyAssignment = assignmentsData.find(
         (a) => a.doador === loggedInUserId && a.tipo_sorteio === 'inimigo'
       );
-      
       let enemy: Participant | null = null;
       if (enemyAssignment) {
         const foundEnemy = participants.find(p => p.user_id === enemyAssignment.receptor);
@@ -107,7 +136,6 @@ const handlePasswordSubmit = async (password: string) => {
       setSecretEnemy(enemy);
       setShowPasswordModal(false); 
       setShowAuthMenu(true);
-      setPasswordError('');
 
     } catch (error: any) {
       console.error("Erro no login via API:", error);
@@ -118,6 +146,8 @@ const handlePasswordSubmit = async (password: string) => {
       }
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -217,6 +247,7 @@ const handlePasswordSubmit = async (password: string) => {
           onClose={handleCloseAll}
           theme="enemy"
           error={passwordError}
+          isLoading={isLoggingIn}
         />
       )}
 

@@ -6,30 +6,38 @@ interface PasswordModalProps {
   onSubmit: (password: string) => void;
   onClose: () => void;
   theme: 'friend' | 'enemy';
-  error?: string;
+  error: string;
+  isLoading: boolean;
 }
 
-export default function PasswordModal({ participantName, onSubmit, onClose, theme, error }: PasswordModalProps) {
+export default function PasswordModal({
+  participantName,
+  onSubmit,
+  onClose,
+  theme,
+  error,
+  isLoading,
+}: PasswordModalProps) {
   const [password, setPassword] = useState('');
-
-  const accentColor = theme === 'friend' ? 'green' : 'red';
-  const bgGradient = theme === 'friend'
-    ? 'from-green-500/20 to-black'
-    : 'from-red-500/20 to-black';
-  const buttonBg = theme === 'friend' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
-  const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(password);
+    if (!isLoading) {
+      onSubmit(password);
+    }
   };
+
+  const borderColor = theme === 'friend' ? 'border-green-500' : 'border-red-500';
+  const buttonColor = theme === 'friend' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+  const errorColor = theme === 'friend' ? 'text-green-300' : 'text-red-300';
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className={`bg-gradient-to-b ${bgGradient} border-2 ${borderColor} rounded-2xl p-8 max-w-md w-full relative shadow-2xl`}>
+      <div className={`bg-gray-900 border-2 ${borderColor} rounded-2xl p-8 max-w-sm w-full relative shadow-2xl`}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          disabled={isLoading}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
         >
           <X size={24} />
         </button>
@@ -42,20 +50,21 @@ export default function PasswordModal({ participantName, onSubmit, onClose, them
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Sua senha secreta"
-            className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-${accentColor}-500 mb-4"
+            disabled={isLoading}
+            className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 disabled:opacity-50"
             autoFocus
           />
 
           {error && (
-            <p className="text-red-400 text-sm mb-4">{error}</p>
+            <p className={`text-sm mt-2 text-center ${errorColor}`}>{error}</p>
           )}
 
           <button
             type="submit"
-            className={`w-full ${buttonBg} text-white font-bold py-3 rounded-lg transition-all duration-300 transform hover:scale-105`}
+            disabled={isLoading || !password}
+            className={`${buttonColor} w-full mt-6 py-3 rounded-lg text-lg text-white font-bold transition-all duration-300 transform hover:scale-105 disabled:bg-gray-600 disabled:scale-100 disabled:cursor-not-allowed`}
           >
-            Revelar Sorteio
+            {isLoading ? 'Verificando...' : 'Revelar Sorteio'}
           </button>
         </form>
       </div>
