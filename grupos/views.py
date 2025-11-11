@@ -6,7 +6,6 @@ from .serializers import UserSerializer, GrupoSerializer, ParticipanteSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Resultado
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
@@ -19,9 +18,9 @@ class GrupoViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]   
 
 class ParticipanteViewSet(viewsets.ModelViewSet):
-    queryset = Participante.objects.all()
+    queryset = Participante.objects.all().order_by('usuario__first_name')
     serializer_class = ParticipanteSerializer
-    permission_classes = [AllowAny, IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Resultado.objects.all()
