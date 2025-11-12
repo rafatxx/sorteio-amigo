@@ -21,62 +21,76 @@ def realizar_sorteio(modeladmin, request, queryset):
 
             if n_amigo < 2:
                 raise Exception(f"O sorteio de AMIGO para '{grupo.nome}' precisa de pelo menos 2 participantes.")
-            
             if n_inimigo == 1:
                 raise Exception(f"O sorteio de INIMIGO para '{grupo.nome}' tem apenas 1 participante e não pode ser realizado.")
 
             with transaction.atomic():
                 Resultado.objects.filter(grupo=grupo).delete()
 
-                lista_amigo = list(users_amigo)
+                lista_doadores_amigo = list(users_amigo)
+                lista_receptores_amigo = list(users_amigo)
                 sorteio_amigo_ok = False
                 pares_amigo = {}
 
-                for _ in range(10000):
-                    random.shuffle(lista_amigo)
+                for _ in range(100):
+                    random.shuffle(lista_receptores_amigo)
+                    pares_tentativa = {}
                     valido = True
+                    
                     for i in range(n_amigo):
-                        doador = lista_amigo[i]
-                        receptor = lista_amigo[(i + 1) % n_amigo]
+                        doador = lista_doadores_amigo[i]
+                        receptor = lista_receptores_amigo[i]
+
+                        if doador == receptor:
+                            valido = False
+                            break
+                        
                         if Exclusao.objects.filter(grupo=grupo, doador=doador, excluido=receptor, tipo_sorteio='amigo').exists():
                             valido = False
                             break
+                        
+                        pares_tentativa[doador] = receptor
+
                     if valido:
-                        for i in range(n_amigo):
-                            pares_amigo[lista_amigo[i]] = lista_amigo[(i + 1) % n_amigo]
+                        pares_amigo = pares_tentativa
                         sorteio_amigo_ok = True
                         break
                 
                 if not sorteio_amigo_ok:
-                    raise Exception(f"Não foi possível gerar o sorteio de AMIGOS para '{grupo.nome}'. Verifique suas 'Exclusões'.")
+                    raise Exception(f"Não foi possível gerar o sorteio de AMIGOS para '{grupo.nome}' após 10.000 tentativas. Suas regras de exclusão podem ser matematicamente impossíveis de resolver.")
 
                 pares_inimigo = {}
                 if n_inimigo >= 2:
-                    lista_inimigo = list(users_inimigo)
+                    lista_doadores_inimigo = list(users_inimigo)
+                    lista_receptores_inimigo = list(users_inimigo)
                     sorteio_inimigo_ok = False
 
-                    for _ in range(10000):
-                        random.shuffle(lista_inimigo)
+                    for _ in range(100):
+                        random.shuffle(lista_receptores_inimigo)
+                        pares_tentativa = {}
                         valido = True
+
                         for i in range(n_inimigo):
-                            doador = lista_inimigo[i]
-                            receptor = lista_inimigo[(i + 1) % n_inimigo]
-                            
-                            if receptor not in users_inimigo:
+                            doador = lista_doadores_inimigo[i]
+                            receptor = lista_receptores_inimigo[i]
+
+                            if doador == receptor:
                                 valido = False
                                 break
                             
                             if Exclusao.objects.filter(grupo=grupo, doador=doador, excluido=receptor, tipo_sorteio='inimigo').exists():
                                 valido = False
                                 break
+                            
+                            pares_tentativa[doador] = receptor
+                        
                         if valido:
-                            for i in range(n_inimigo):
-                                pares_inimigo[lista_inimigo[i]] = lista_inimigo[(i + 1) % n_inimigo]
+                            pares_inimigo = pares_tentativa
                             sorteio_inimigo_ok = True
                             break
 
                     if not sorteio_inimigo_ok:
-                        raise Exception(f"Não foi possível gerar o sorteio de INIMIGOS para '{grupo.nome}'. Verifique suas 'Exclusões'.")
+                         raise Exception(f"Não foi possível gerar o sorteio de INIMIGOS para '{grupo.nome}' após 10.000 tentativas. Suas regras de exclusão (que são muitas!) podem ser matematicamente impossíveis de resolver.")
 
                 for doador, receptor in pares_amigo.items():
                     Resultado.objects.create(grupo=grupo, doador=doador, receptor=receptor, tipo_sorteio='amigo')
@@ -107,7 +121,7 @@ class GrupoAdmin(admin.ModelAdmin):
     actions = [realizar_sorteio]
     inlines = [ParticipanteInline]
     exclude = ('participantes',)
-    search_fields = ['nome']
+    search_fields = ['nome'] 
 
 class ParticipanteAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'grupo', 'genero')
@@ -117,9 +131,20 @@ class ParticipanteAdmin(admin.ModelAdmin):
 class UserAdmin(BaseUserAdmin):
     search_fields = ('username', 'first_name', 'last_name', 'email')
 
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.unregister(User) 
+admin.site.register(User, UserAdmin) 
+
+class ResultadoAdmin(admin.ModelAdmin):
+    list_display = ('grupo', 'doador', 'receptor', 'tipo_sorteio')
+    list_filter = ('grupo', 'tipo_sorteio')
+    autocomplete_fields = ('grupo', 'doador', 'receptor')
+
+class ExclusaoAdmin(admin.ModelAdmin):
+    list_display = ('grupo', 'doador', 'excluido', 'tipo_sorteio')
+    list_filter = ('grupo', 'tipo_sorteio')
+    autocomplete_fields = ('grupo', 'doador', 'excluido')
+
 admin.site.register(Grupo, GrupoAdmin)
 admin.site.register(Participante, ParticipanteAdmin)
-admin.site.register(Resultado)
-admin.site.register(Exclusao)
+admin.site.register(Resultado, ResultadoAdmin)
+admin.site.register(Exclusao, ExclusaoAdmin)
