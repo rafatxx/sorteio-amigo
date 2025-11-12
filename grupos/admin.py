@@ -32,7 +32,7 @@ def realizar_sorteio(modeladmin, request, queryset):
                 sorteio_amigo_ok = False
                 pares_amigo = {}
 
-                for _ in range(10):
+                for _ in range(10000):
                     random.shuffle(lista_amigo)
                     valido = True
                     for i in range(n_amigo):
@@ -55,7 +55,7 @@ def realizar_sorteio(modeladmin, request, queryset):
                     lista_inimigo = list(users_inimigo)
                     sorteio_inimigo_ok = False
 
-                    for _ in range(10):
+                    for _ in range(10000):
                         random.shuffle(lista_inimigo)
                         valido = True
                         for i in range(n_inimigo):
