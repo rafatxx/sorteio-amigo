@@ -32,7 +32,7 @@ def realizar_sorteio(modeladmin, request, queryset):
                 sorteio_amigo_ok = False
                 pares_amigo = {}
 
-                for _ in range(100):
+                for _ in range(1000):
                     random.shuffle(lista_receptores_amigo)
                     pares_tentativa = {}
                     valido = True
@@ -57,7 +57,7 @@ def realizar_sorteio(modeladmin, request, queryset):
                         break
                 
                 if not sorteio_amigo_ok:
-                    raise Exception(f"Não foi possível gerar o sorteio de AMIGOS para '{grupo.nome}' após 10.000 tentativas. Suas regras de exclusão podem ser matematicamente impossíveis de resolver.")
+                    raise Exception(f"Não foi possível gerar o sorteio de AMIGOS para '{grupo.nome}' após 1.000 tentativas. Suas regras de exclusão podem ser matematicamente impossíveis de resolver.")
 
                 pares_inimigo = {}
                 if n_inimigo >= 2:
@@ -65,7 +65,7 @@ def realizar_sorteio(modeladmin, request, queryset):
                     lista_receptores_inimigo = list(users_inimigo)
                     sorteio_inimigo_ok = False
 
-                    for _ in range(100):
+                    for _ in range(1000):
                         random.shuffle(lista_receptores_inimigo)
                         pares_tentativa = {}
                         valido = True
@@ -90,7 +90,7 @@ def realizar_sorteio(modeladmin, request, queryset):
                             break
 
                     if not sorteio_inimigo_ok:
-                         raise Exception(f"Não foi possível gerar o sorteio de INIMIGOS para '{grupo.nome}' após 10.000 tentativas. Suas regras de exclusão (que são muitas!) podem ser matematicamente impossíveis de resolver.")
+                         raise Exception(f"Não foi possível gerar o sorteio de INIMIGOS para '{grupo.nome}' após 1.000 tentativas. Suas regras de exclusão (que são muitas!) podem ser matematicamente impossíveis de resolver.")
 
                 for doador, receptor in pares_amigo.items():
                     Resultado.objects.create(grupo=grupo, doador=doador, receptor=receptor, tipo_sorteio='amigo')
