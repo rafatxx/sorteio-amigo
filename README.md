@@ -1,130 +1,114 @@
-# 🎉 Amigo Secreto e Inimigo Secreto - Sorteios Online 
+# 🎄 Sorteio do Amigo (e Inimigo) Secreto
 
-Este é um software para realizar sorteios de *Amigo Secreto* e *Inimigo Secreto* com uma dinâmica mais personalizada, para facilitar e agilizar o processo de sorteio dentro de grandes grupos. A aplicação tem como foco a utilização de um sistema onde os participantes podem visualizar seus amigos e inimigos secretos com base em uma lista de amigos próximos, além de poderem registrar seus gostos para ajudar na escolha de presentes.
+Um sistema web completo, interativo e seguro para gerenciar o tradicional sorteio de Amigo Secreto, com o divertido adicional do **Inimigo Secreto**. Construído com uma arquitetura moderna separando Front-end (React) e Back-end (Django).
 
-## 🔧 Tecnologias Utilizadas
+## ✨ Funcionalidades
 
-- **Frontend**: React Native
-- **Backend**: C
-- **Banco de Dados**: PostgreSQL
+* **Sorteio Duplo:** Suporte simultâneo para sorteio de "Amigo Secreto" e "Inimigo Secreto".
+* **Algoritmo de Sorteio Avançado:** Utiliza um algoritmo robusto de embaralhamento (*derangement*) no back-end para garantir sorteios válidos mesmo com uma lista complexa de **exclusões** (regras de quem não pode tirar quem).
+* **Autenticação Segura:** Login individual por participante usando tokens JWT para revelar seus resultados.
+* **Gestão de Preferências:** Participantes podem adicionar e atualizar suas preferências de presentes ("gostos pessoais") a qualquer momento.
+* **Alta Performance e Resiliência:** Front-end otimizado com sistema de **Cache Local (10 minutos)** para a lista de participantes, suportando picos de acessos simultâneos sem sobrecarregar o banco de dados gratuito.
+* **UI/UX Temática:** Interface moderna, escura (Dark Mode) e responsiva com Tailwind CSS, incluindo efeitos visuais natalinos (neve caindo) e cores dinâmicas baseadas no gênero do participante.
+* **Painel Administrativo:** Gestão completa de grupos, usuários, exclusões e disparo do sorteio através do painel nativo do Django Admin.
 
-## 📋 Funcionalidades
+## 🚀 Tecnologias Utilizadas
 
-### 1. **Cadastro de Participantes**
-Cada participante do sorteio é registrado no banco de dados com as seguintes informações:
-- **ID**
-- **Nome**
-- **Gênero**
-- **Lista de Amigos Próximos** (Relacional entre participantes para impedir que pessoas "não próximas" se tirem no sorteio)
+### Front-end
+* **React** (com Vite)
+* **TypeScript**
+* **Tailwind CSS** (Estilização)
+* **Lucide React** (Ícones)
+* **Axios** (Comunicação com a API e Interceptors para JWT)
 
-### 2. **Sorteio de Amigo e Inimigo Secreto**
-A aplicação possui duas abas:
-- **Amigo Secreto**: Mostra a lista de todos os participantes e realiza o sorteio para descobrir quem é o amigo secreto de cada um.
-- **Inimigo Secreto**: Exibe a lista de participantes e sorteia quem será o inimigo secreto de cada pessoa.
+### Back-end
+* **Python**
+* **Django**
+* **Django Rest Framework (DRF)** (Construção da API)
+* **Simple JWT** (Autenticação)
+* **PostgreSQL** (Banco de Dados em Nuvem hospedado no **Neon**)
 
-### 3. **Filtro de Amigos Próximos**
-O sorteio leva em consideração a configuração de amigos próximos de cada participante, garantindo que:
-- Um participante **não sorteie alguém que não seja seu amigo próximo**.
-- Isso ajuda a tornar a dinâmica mais interessante e divertida para grupos grandes.
+### Infraestrutura & Deploy
+* **Render** (Hospedagem do Front-end e Back-end)
+* **Uptime Robot** (Monitoramento de disponibilidade)
 
-### 4. **Acesso por Senha**
-Ao clicar em um participante, é aberto um modal para o usuário inserir a senha associada ao participante. Isso garante que cada pessoa consiga ver apenas quem é o seu amigo e inimigo secreto.
+---
 
-### 5. **Preferências para Presentes**
-Cada participante pode cadastrar seus gostos pessoais, como:
-- **Esportes**
-- **Video-games**
-- **Filmes**
-- **Hobbies**
+## 🛠️ Como executar o projeto localmente
 
-Essas preferências podem ser utilizadas no futuro para sugerir presentes mais personalizados para o sorteio.
+Para rodar este projeto na sua máquina, você precisará configurar o Back-end e o Front-end separadamente.
 
-## 🔑 Como Rodar o Projeto
+Pré-requisitos
+Antes de começar, você precisará ter instalado em sua máquina as seguintes ferramentas:
 
-### 1. **Clonando o Repositório**
+Git
+
+Node.js (versão 18+ recomendada)
+
+Python (versão 3.10+ recomendada)
+
+### 1. Configurando o Back-end (Django)
+
 ```bash
-git clone https://github.com/seu-usuario/amigo-secreto-inimigo-secreto.git
-cd amigo-secreto-inimigo-secreto
+# Clone o repositório
+git clone [https://github.com/rafatxx/sorteio-amigo.git](https://github.com/rafatxx/sorteio-amigo.git)
 
-### 1. **Clonando o Repositório**
+# Entre na pasta do backend (substitua pelo nome correto da sua pasta)
+cd backend
 
-No frontend (React Native):
+# Crie um ambiente virtual (Windows)
+python -m venv venv
+venv\Scripts\activate
 
+# Instale as dependências
+pip install -r requirements.txt
+
+# Execute as migrações para criar o banco de dados local
+python manage.py migrate
+
+# Crie um superusuário para acessar o painel admin
+python manage.py createsuperuser
+
+# Inicie o servidor de desenvolvimento
+python manage.py runserver
+
+O back-end estará rodando em http://127.0.0.1:8000/. Acesse http://127.0.0.1:8000/admin/ para gerenciar o sistema.
+
+2. Configurando o Front-end (React)
+Abra um novo terminal e navegue até a pasta do front-end.
+
+Bash
+# Entre na pasta do frontend
 cd frontend
+
+# Instale as dependências
 npm install
 
-No backend (C):
+# Crie um arquivo .env na raiz do frontend com a URL da API local
+echo VITE_API_URL=[http://127.0.0.1:8000/api/](http://127.0.0.1:8000/api/) > .env
 
-cd backend
-make
+# Inicie o servidor de desenvolvimento
+npm run dev
+O front-end estará rodando em http://localhost:5173/.
 
-### 3. **Configuração do Banco de Dados**
+⚙️ Variáveis de Ambiente
+Para o ambiente de produção, certifique-se de configurar as seguintes variáveis:
 
-Utilize o PostgreSQL para criar o banco de dados com a estrutura necessária. Abaixo está um exemplo de como configurar a base:
+Front-end (.env):
 
-CREATE DATABASE amigo_secreto;
+VITE_API_URL: URL da sua API no Render (ex: https://seu-backend.onrender.com/api/)
 
-CREATE TABLE participantes (
-  id SERIAL PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  genero VARCHAR(50) NOT NULL
-);
+Back-end (Configurações do Render):
 
-CREATE TABLE proximos (
-  participante_id INT REFERENCES participantes(id),
-  amigo_id INT REFERENCES participantes(id)
-);
+DATABASE_URL: String de conexão do PostgreSQL (fornecida pelo Neon).
 
-CREATE TABLE preferencias (
-  participante_id INT REFERENCES participantes(id),
-  gosto VARCHAR(255)
-);
+SECRET_KEY: Chave secreta do Django.
 
-CREATE TABLE senhas (
-  participante_id INT REFERENCES participantes(id),
-  senha VARCHAR(255) NOT NULL
-);
+DEBUG: False (para produção).
 
-### **4. Rodando o Projeto**
+ALLOWED_HOSTS: URL do seu back-end no Render.
 
-Para rodar o frontend (React Native):
+CORS_ALLOWED_ORIGINS: URL do seu front-end no Render.
 
-npx react-native run-android  # Para Android
-npx react-native run-ios  # Para iOS (se estiver em ambiente macOS)
-
-Para rodar o backend, se for um servidor que utiliza o C:
-
-./server
-
-# 📂 Estrutura do Projeto
-
-amigo-secreto-inimigo-secreto/
-├── backend/                  # Código fonte do servidor (C)
-│   ├── src/                  # Código fonte em C
-│   ├── Makefile              # Makefile para compilação do backend
-│   └── README.md             # Instruções para o backend
-├── frontend/                 # Código fonte do frontend (React Native)
-│   ├── src/                  # Componentes e lógica de UI
-│   ├── App.js                # Ponto de entrada do React Native
-│   └── README.md             # Instruções para o frontend
-├── database/                 # Scripts de criação e migração do banco de dados
-├── README.md                 # Este arquivo
-└── LICENSE                   # Licença do projeto
-
-# ⚙️ Fluxo do Sorteio
-
-Cadastro dos Participantes: Ao iniciar, todos os participantes devem ser cadastrados com nome, gênero e suas preferências.
-
-Configuração de Amigos Próximos: Cada participante pode definir uma lista de amigos próximos para garantir que apenas essas pessoas possam ser sorteadas.
-
-Realização do Sorteio: O sistema realizará o sorteio, levando em conta as configurações de amigos próximos e permitindo que cada participante visualize seu amigo e inimigo secreto após inserir a senha.
-
-Visualização das Preferências: As preferências registradas pelos participantes serão exibidas para facilitar a escolha dos presentes.
-
-🛠️ Funcionalidades Futuras
-
-Notificações: Enviar notificações para os participantes sobre o sorteio e o que eles podem fazer com as preferências cadastradas.
-
-Sugestões de Presentes: Com base nos gostos dos participantes, sugerir ideias de presentes.
-
-Personalização do Sorteio: Opções para alterar regras do sorteio, como incluir/incluir certos participantes, etc.
+👨‍💻 Autor
+Desenvolvido por Rafael (@rafatxx).
