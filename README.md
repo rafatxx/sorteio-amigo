@@ -1,8 +1,8 @@
-# 🎄 Sorteio do Amigo (e Inimigo) Secreto
+# Sorteio do Amigo (e Inimigo) Secreto
 
 Um sistema web completo, interativo e seguro para gerenciar o tradicional sorteio de Amigo Secreto, com o divertido adicional do **Inimigo Secreto**. Construído com uma arquitetura moderna separando Front-end (React) e Back-end (Django).
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 * **Sorteio Duplo:** Suporte simultâneo para sorteio de "Amigo Secreto" e "Inimigo Secreto".
 * **Algoritmo de Sorteio Avançado:** Utiliza um algoritmo robusto de embaralhamento (*derangement*) no back-end para garantir sorteios válidos mesmo com uma lista complexa de **exclusões** (regras de quem não pode tirar quem).
@@ -12,7 +12,7 @@ Um sistema web completo, interativo e seguro para gerenciar o tradicional sortei
 * **UI/UX Temática:** Interface moderna, escura (Dark Mode) e responsiva com Tailwind CSS, incluindo efeitos visuais natalinos (neve caindo) e cores dinâmicas baseadas no gênero do participante.
 * **Painel Administrativo:** Gestão completa de grupos, usuários, exclusões e disparo do sorteio através do painel nativo do Django Admin.
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Front-end
 * **React** (com Vite)
@@ -34,7 +34,7 @@ Um sistema web completo, interativo e seguro para gerenciar o tradicional sortei
 
 ---
 
-## 🛠️ Como executar o projeto localmente
+## Como executar o projeto localmente
 
 Para rodar este projeto na sua máquina, você precisará configurar o Back-end e o Front-end separadamente.
 
@@ -91,7 +91,7 @@ echo VITE_API_URL=[http://127.0.0.1:8000/api/](http://127.0.0.1:8000/api/) > .en
 npm run dev
 O front-end estará rodando em http://localhost:5173/.
 
-⚙️ Variáveis de Ambiente
+Variáveis de Ambiente
 Para o ambiente de produção, certifique-se de configurar as seguintes variáveis:
 
 Front-end (.env):
@@ -110,5 +110,5 @@ ALLOWED_HOSTS: URL do seu back-end no Render.
 
 CORS_ALLOWED_ORIGINS: URL do seu front-end no Render.
 
-👨‍💻 Autor
-Desenvolvido por Rafael (@rafatxx).
+Autor
+Desenvolvido por Rafael Teixeira (@rafatxx) e Victor Carmona (@carmowa).
